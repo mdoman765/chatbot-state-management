@@ -23,8 +23,16 @@ builder.Services.AddScoped<IWhatsAppSessionRepository, WhatsAppSessionRepository
 builder.Services.AddScoped<IWhatsAppSessionService, WhatsAppSessionService>();
 builder.Services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
 builder.Services.AddScoped<IWhatsAppMessageService, WhatsAppMessageService>();
-builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IWhatsAppComplaintService, WhatsAppComplaintService>();
+builder.Services.AddScoped<IWhatsAppComplaintRepository, WhatsAppComplaintRepository>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient("CrmClient", client => {
+    var key = builder.Configuration["Crm:ApiKey"];
+    if (!string.IsNullOrWhiteSpace(key))
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {key}");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 
 builder.Services.Configure<FormOptions>(o =>

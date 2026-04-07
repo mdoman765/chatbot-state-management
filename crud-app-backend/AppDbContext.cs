@@ -19,6 +19,8 @@ namespace crud_app_backend
         // ── WhatsApp tables ──────────────────────────────────────────────
         public DbSet<WhatsAppSession> WhatsAppSessions { get; set; } = null!;
         public DbSet<WhatsAppSessionHistory> WhatsAppSessionHistories { get; set; } = null!;
+        public DbSet<WhatsAppComplaint> WhatsAppComplaints { get; set; } = null!;
+        public DbSet<WhatsAppComplaintMedia> WhatsAppComplaintMediaItems { get; set; } = null!;
 
 
 
@@ -147,6 +149,61 @@ namespace crud_app_backend
                       .HasConstraintName("FK_SessionHistory_Phone")
                       .OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<WhatsAppComplaint>(entity =>
+            {
+                entity.ToTable("WhatsAppComplaints", "dbo");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).UseIdentityColumn();
+
+                entity.Property(e => e.ComplaintNumber).HasMaxLength(20);
+                entity.HasIndex(e => e.ComplaintNumber)
+                      .IsUnique()
+                      .HasFilter("[ComplaintNumber] IS NOT NULL")
+                      .HasDatabaseName("UX_WhatsAppComplaints_ComplaintNumber");
+
+                entity.Property(e => e.WhatsappPhone).HasMaxLength(30).IsRequired();
+                entity.HasIndex(e => e.WhatsappPhone)
+                      .HasDatabaseName("IX_WhatsAppComplaints_WhatsappPhone");
+
+                entity.Property(e => e.StaffId).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.StaffName).HasMaxLength(255);
+                entity.Property(e => e.OfficialPhone).HasMaxLength(30);
+                entity.Property(e => e.Designation).HasMaxLength(100);
+                entity.Property(e => e.Dept).HasMaxLength(100);
+                entity.Property(e => e.GroupName).HasMaxLength(100);
+                entity.Property(e => e.Company).HasMaxLength(100);
+                entity.Property(e => e.LocationName).HasMaxLength(200);
+                entity.Property(e => e.Email).HasMaxLength(255);
+                entity.Property(e => e.Description).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Status).HasMaxLength(30).IsRequired().HasDefaultValue("open");
+                entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.UpdatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+
+                entity.HasMany(e => e.MediaItems)
+                      .WithOne(m => m.Complaint)
+                      .HasForeignKey(m => m.ComplaintId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<WhatsAppComplaintMedia>(entity =>
+            {
+                entity.ToTable("WhatsAppComplaintMedia", "dbo");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).UseIdentityColumn();
+
+                entity.Property(e => e.MessageId).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.MediaType).HasMaxLength(10).IsRequired();
+                entity.Property(e => e.FileUrl).HasMaxLength(2048);
+                entity.Property(e => e.MimeType).HasMaxLength(100);
+                entity.Property(e => e.Caption).HasMaxLength(1000);
+                entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+
+                entity.HasIndex(e => e.MessageId)
+                      .HasDatabaseName("IX_WhatsAppComplaintMedia_MessageId");
+                entity.HasIndex(e => e.ComplaintId)
+                      .HasDatabaseName("IX_WhatsAppComplaintMedia_ComplaintId");
+            });
+
 
             // ── WhatsAppSessionHistory ───────────────────────────────────
             modelBuilder.Entity<WhatsAppSessionHistory>(entity =>
